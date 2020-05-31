@@ -1,5 +1,5 @@
 import pygame
-
+from random import randint
 pygame.init()
 
 BLACK = (0,0,0)
@@ -40,10 +40,15 @@ def drawSquare(posX, posY):
 def delSquare(posX,posY):
     pygame.draw.rect(gameDisplay, BLACK,(posX*16,posY*16,15,15))
 
-
+def randSquare():
+    pointX = randint(0,44)
+    pointY = randint(0,32)
+    print(f"x: {pointX} y: {pointY}")
+    drawSquare(5,5)
+    return (pointX,pointY)
 
 def gameLoop():
-    mode = 0
+    mode = "Paused"
     #creates a 32x44 map (32 = y, 44 = x)
     map = [[0 for x in range(GLENGTH)] for y in range(GHEIGHT)]
     
@@ -60,39 +65,43 @@ def gameLoop():
     gameDisplay.blit(startText,startRect)
 
 
-    pygame.draw.rect(gameDisplay,WHITE,(100,100,16,16))
+    #pygame.draw.rect(gameDisplay,WHITE,(100,100,16,16))
 
 
     player = Snake()
     while playing:
+        point_location = [0,0]
         #updates screen
         mouse = pygame.mouse.get_pos()
         diff =  pygame.time.get_ticks()
 
-        if((mouse[0] > 310 and mouse[0] < (310+55)) and (mouse[1] > 125 and mouse[1] < (100+50))):
-            startText = smallFont.render('Start',True,YELLOW)
-        else:
-            startText = smallFont.render("Start",True,WHITE)
+
+        if mode != "playing":
+
+            if((mouse[0] > 310 and mouse[0] < (310+55)) and (mouse[1] > 125 and mouse[1] < (100+50))):
+                startText = smallFont.render('Start',True,YELLOW)
+            else:
+                startText = smallFont.render("Start",True,WHITE)
 
 
-        gameDisplay.blit(startText,startRect)
+            gameDisplay.blit(startText,startRect)
 
         pygame.display.flip()
         
        
-        #clock.tick_busy_loop(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 playing = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if((event.button == 1) and (event.pos[0] > 310 and event.pos[0] < 310+55) and (event.pos[1] > 125 and event.pos[1] < 100+50) and (mode == 0)):
+                if((event.button == 1) and (event.pos[0] > 310 and event.pos[0] < 310+55) and (event.pos[1] > 125 and event.pos[1] < 100+50) and (mode != "playing")):
                     print(f"Calling game loop... {mode}")
                    
                     player.spawn_snake()
+                    point_location = randSquare()
+                    mode = "playing"
+                    screen.fill(BLACK)
 
-                    mode = 1
-                    startText = smallFont.render("Start",True,BLACK)
-                    gameDisplay.blit(startText,startRect)
+                    pygame.display.flip()
 
                    #calls the actual game play
             elif(event.type == pygame.KEYDOWN):
@@ -104,11 +113,12 @@ def gameLoop():
                     player.direction = "NORTH"
                 elif(event.key == pygame.K_DOWN):
                     player.direction = "SOUTH"
-        if (diff >= oldDiff+60):
+        if (diff >= oldDiff+60 and mode == "playing"):
             oldDiff = diff
             player.moveSnake()
             #print(f"ticks: {diff}")
-        
+        if(player.pos[0] == point_location):
+            print("POINT!!")
         clock.tick(60)
 
 
@@ -164,7 +174,7 @@ def game_Menu():
                 menu= False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if(event.button == 1) and (event.pos[0] > 240 and event.pos[0] < 240+200) and (event.pos[1] > 200 and event.pos[1] < 200+75):
-                   print("Calling game loop...")
+                   print("Calling game loop2...")
                    menu = False
                    gameLoop()
                    
