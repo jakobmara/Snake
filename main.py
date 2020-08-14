@@ -46,7 +46,7 @@ def randSquare():
     print(f"x: {pointX} y: {pointY}")
     drawSquare(pointX,pointY)
     return (pointX,pointY)
-
+#I think i should make this an object itself and have these things in as class variables so i can use 
 def gameLoop():
     mode = "Paused"
     #creates a 32x44 map (32 = y, 44 = x)
@@ -91,13 +91,13 @@ def gameLoop():
 
         pygame.display.flip()
         
-        print(f"player: {player.pos[0]} point: {point_location}")
 
         if(player.pos[0][0] == point_location[0] and player.pos[0][1] == point_location[1]): #if player lands on point
-            point_location = randSquare() #new point location is setup
-            player.add_square()
-            #player.size += 1
             
+            player.add_square()
+            point_location = randSquare() #new point location is setup
+
+
             scoreText = smallFont.render(playerScore,True,BLACK) #removes old text
             gameDisplay.blit(scoreText,[600,0])
 
@@ -133,12 +133,13 @@ def gameLoop():
                 elif(event.key == pygame.K_DOWN):
                     player.direction = "SOUTH"
         
-        if (diff >= oldDiff+60 and mode == "playing"): #this is the refresh rate
+        if (diff >= oldDiff+200 and mode == "playing"): #this is the refresh rate
             oldDiff = diff
-            player.moveSnake()
+            player.moveSnake(point_location)
             #print(f"ticks: {diff}")
-    
-    clock.tick(60)
+            #print(f"player: {player.pos} point: {point_location} Size: {player.size}")
+
+    clock.tick(500)
 
 
 #how should i do this snake game? make it a board and seperate it into blocks? 
@@ -150,13 +151,27 @@ class Snake:
         self.speed = 1 #might not include speed
         self.pos = [[21,16]] #coords of the snake's head
         self.direction = "NORTH"
+        self.grow = False
 
 
-    def add_square(self):
-        newCoords = [self.pos[self.size-1][0] - 1, self.pos[self.size-1][1] - 1] #finding position of new square
-        print(f"ADDED: {self.pos}")
-        self.pos.append(newCoords) #adding it to the list of square positions
-        drawSquare(newCoords[0],newCoords[1]) #drawing it on screen
+    def add_square(self): #for snake food
+         #finding position of new square
+        if self.direction == "NORTH":
+            newCoords = [self.pos[self.size-1][0],self.pos[self.size-1][1] + 1] 
+        elif self.direction == "SOUTH":
+            newCoords = [self.pos[self.size-1][0],self.pos[self.size-1][1] - 1] 
+        elif self.direction == "EAST":
+            newCoords = [self.pos[self.size-1][0] - 1,self.pos[self.size-1][1]]  
+        elif self.direction == "WEST":
+            newCoords = [self.pos[self.size-1][0] + 1,self.pos[self.size-1][1]] 
+
+        #have it add the extra square on top just keep that new location as the spot for where the square was added
+
+
+
+        #print(f"OG: {self.pos} ADDED: {newCoords}")
+        #self.pos.append(newCoords) #adding it to the list of square positions
+        #drawSquare(newCoords[0],newCoords[1]) #drawing it on screen #I CAN PROLl get rid of this line cuz now drawsnake will handle the drawing
         self.size += 1 #incrementing score/size
         pass
 
@@ -166,40 +181,94 @@ class Snake:
         #drawSquare(22,16)
         #drawSquare(23,16)
     
-    def moveSnake(self): #make a for loop that goes through the list of positions and updates all of them depending on direction
+    #should add new coord and remove last coord in list end of function should call drawSnake()
+    def moveSnake(self,point_location): 
+        
+        #i should get rid of all the update and instead add the new value to the list so that it'd work when it comes to updating the entire array
+        #i would insert thew new val and depending on the size i'd have to remove the last item in the list
         if self.direction == "NORTH":
-            delSquare(self.pos[self.size-1][0],self.pos[self.size-1][1]) #delsquare removes the last square on the snake
-            if self.pos[0][1] == 0: #reached border
+
+            if self.pos[0][1] == 0:
+                #gameOver()
                 self.pos[0][1] = 0
             else:
-                self.pos[0][1] = self.pos[0][1] - 1
-            drawSquare(self.pos[0][0],self.pos[0][1])
+                newCoord = [self.pos[0][0],self.pos[0][1] -1]
+                self.pos.insert(0,newCoord)
+                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
+                    self.grow = True 
+            pass
 
         elif self.direction == "SOUTH":
-            delSquare(self.pos[self.size-1][0],self.pos[self.size-1][1])
-            if self.pos[0][1] == GHEIGHT - 1: #reached border
+            if self.pos[0][1] == GHEIGHT - 1:
+                #gameOver()
+
                 self.pos[0][1] = GHEIGHT - 1
             else:
-                self.pos[0][1] = self.pos[0][1] + 1
-            drawSquare(self.pos[0][0],self.pos[0][1])
+                newCoord = [self.pos[0][0],self.pos[0][1] +1]
+                self.pos.insert(0,newCoord)
+                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
+                    self.grow = True 
+           
 
         elif self.direction == "EAST":
-            delSquare(self.pos[self.size-1][0],self.pos[self.size-1][1]) #can proll move this to the else
-            if self.pos[0][0] == GLENGTH - 1:
+            if self.pos[0][0] == GLENGTH - 1: #reached border 
+                #gameOver()
                 self.pos[0][0] = GLENGTH - 1
             else:
-                self.pos[0][0] = self.pos[0][0] + 1
-            drawSquare(self.pos[0][0],self.pos[0][1])
+                newCoord = [self.pos[0][0] + 1,self.pos[0][1]]
+                self.pos.insert(0,newCoord)
+                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
+                    self.grow = True 
+            pass
 
         elif self.direction == "WEST":
-            delSquare(self.pos[self.size-1][0],self.pos[self.size-1][1])
             if self.pos[0][0] == 0:
+                #gameOver()
                 self.pos[0][0] = 0
             else:
-                self.pos[0][0] = self.pos[0][0] - 1
-            drawSquare(self.pos[0][0],self.pos[0][1])
-        
+                newCoord = [self.pos[0][0] - 1,self.pos[0][1]]
+                self.pos.insert(0,newCoord)
+                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
+                    self.grow = True 
+            
+            pass
+        print("point: " + str(point_location) + " New coord: " + str(newCoord))
+        #print(newCoord)
+        print(self.size)
+
+        if self.grow == True:
+            print("Grown????\n\n\n")
+        self.drawSnake()
         pass
+
+    #I should do something like: if len(player.pos) < player.size:
+    #player.pos.insert(0,coord)
+
+
+    #this is meant to update the snake body array and draw it on screen
+    #maybe i should make the array 1 item bigger so it can contain the position  that needs to be delted
+    def drawSnake(self):
+        print("POS:")
+        #print(self.pos)
+        drawSquare(self.pos[0][0],self.pos[0][1]) #draws the updated pos of the head of the snake
+        lastPos = len(self.pos) -1
+        if len(self.pos) > self.size:
+            if self.grow == True:
+                print("DIDNT DELL!!!IH\n\n")
+                self.grow = False
+            else:
+                print("DELED")
+
+                delSquare(self.pos[lastPos][0], self.pos[lastPos][1])
+                deleted = self.pos.pop(lastPos)
+        else:
+            print("NOT DELETING!!!!")
+
+        print("final pos list:")
+        print(self.pos)
+
+        return 
+        
 
 def game_Menu():
     playText = smallFont.render("Play",True,BLACK)
@@ -241,10 +310,13 @@ def game_Menu():
             pygame.display.flip()
             
             # --- Limit to 60 frames per second
-            clock.tick(60)
+            clock.tick(500)
 game_Menu()
 
 print("QUOT")
 pygame.quit()
 
 
+#right now it's messing up because if im going up it deducts 1 to the Y but when i turn right it deducts 1 from the X but doesn't fix the original Y problem
+#possible solutions:
+#   Having an array of 
