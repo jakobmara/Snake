@@ -113,10 +113,21 @@ def gameLoop():
                 playing = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if((event.button == 1) and (event.pos[0] > 310 and event.pos[0] < 310+55) and (event.pos[1] > 125 and event.pos[1] < 100+50) and (mode != "playing")):
+                    
+                    scoreText = smallFont.render(playerScore,True,BLACK) #removes old text
+                    gameDisplay.blit(scoreText,[600,0])
+
+                    playerScore = "Score 0" #updates text with new score
+                    
+                    print("REWRUTUBG!!! ")
+                    scoreText = smallFont.render(playerScore,True,RED) #displays new text
+                    gameDisplay.blit(scoreText,[600,0])
+                    
                     print(f"Calling game loop... {mode}")
                    
                     player.spawn_snake()
                     mode = "playing"
+                    player.game_over = False
                     screen.fill(BLACK)
                     point_location = randSquare()
                     gameDisplay.blit(scoreText,[600,0])
@@ -133,12 +144,29 @@ def gameLoop():
                 elif(event.key == pygame.K_DOWN):
                     player.direction = "SOUTH"
         
-        if (diff >= oldDiff+200 and mode == "playing"): #this is the refresh rate
+        #if statement to make sure the score text doesn't get modified 
+        if(player.pos[0][0] >= 37 - player.size and player.pos[0][1] < 2 + player.size): #added player size because if statement only looks at head pos
+            scoreText = smallFont.render(playerScore,True,BLACK) 
+            gameDisplay.blit(scoreText,[600,0])
+
+            playerScore = "Score %d" % (player.size -1) #updates text with new score
+            
+
+            scoreText = smallFont.render(playerScore,True,RED) #displays new text
+            gameDisplay.blit(scoreText,[600,0])
+            pass
+
+
+        if (diff >= oldDiff+64 and mode == "playing"): #this is the refresh rate
             oldDiff = diff
-            player.moveSnake(point_location)
+            game = player.moveSnake(point_location)
+            if game == True:
+                mode = "dead"
             #print(f"ticks: {diff}")
             #print(f"player: {player.pos} point: {point_location} Size: {player.size}")
-
+        if(mode == "dead"):
+            pass
+            #player.del_snake()
     clock.tick(500)
 
 
@@ -148,11 +176,16 @@ class Snake:
 
     def __init__(self):
         self.size = 1
+        self.game_over = False
         self.speed = 1 #might not include speed
         self.pos = [[21,16]] #coords of the snake's head
         self.direction = "NORTH"
-        self.grow = False
+        self.dead = False
 
+    def del_snake(self):
+        for x in self.pos:
+            delSquare(x[0],x[1])
+        #delSquare(self.pos[lastPos][0], self.pos[lastPos][1])
 
     def add_square(self): #for snake food
          #finding position of new square
@@ -177,7 +210,9 @@ class Snake:
 
 
     def spawn_snake(self):
+        self.size = 1
         drawSquare(21,16)
+        self.pos = [[21,16]]
         #drawSquare(22,16)
         #drawSquare(23,16)
     
@@ -189,57 +224,73 @@ class Snake:
         if self.direction == "NORTH":
 
             if self.pos[0][1] == 0:
-                #gameOver()
+                self.game_over = True
                 self.pos[0][1] = 0
+                newCoord = [0,0]
             else:
                 newCoord = [self.pos[0][0],self.pos[0][1] -1]
+                if(self.pos.count(newCoord)) >= 1:
+                    self.dead = True
+                    self.game_over = True
                 self.pos.insert(0,newCoord)
-                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
-                    self.grow = True 
+                
             pass
 
         elif self.direction == "SOUTH":
             if self.pos[0][1] == GHEIGHT - 1:
-                #gameOver()
+                self.game_over = True
 
                 self.pos[0][1] = GHEIGHT - 1
+                newCoord = [0,0]
             else:
                 newCoord = [self.pos[0][0],self.pos[0][1] +1]
+                if(self.pos.count(newCoord)) >= 1:
+                    self.dead = True
+                    self.game_over = True
                 self.pos.insert(0,newCoord)
-                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
-                    self.grow = True 
+                
            
 
         elif self.direction == "EAST":
             if self.pos[0][0] == GLENGTH - 1: #reached border 
-                #gameOver()
+                self.game_over = True
                 self.pos[0][0] = GLENGTH - 1
+                newCoord = [0,0]
+                
             else:
                 newCoord = [self.pos[0][0] + 1,self.pos[0][1]]
+                if(self.pos.count(newCoord)) >= 1:
+                    self.dead = True
+                    self.game_over = True
                 self.pos.insert(0,newCoord)
-                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
-                    self.grow = True 
+                
+                 
             pass
 
         elif self.direction == "WEST":
             if self.pos[0][0] == 0:
-                #gameOver()
+                self.game_over = True
                 self.pos[0][0] = 0
+                newCoord = [0,0]
             else:
                 newCoord = [self.pos[0][0] - 1,self.pos[0][1]]
+                if(self.pos.count(newCoord)) >= 1:
+                    self.dead = True
+                    self.game_over = True
                 self.pos.insert(0,newCoord)
-                if newCoord[0] == point_location[0] and newCoord[1] == point_location[1]:
-                    self.grow = True 
+                 
             
             pass
+        print("NEW  coord: " + str(newCoord))
         print("point: " + str(point_location) + " New coord: " + str(newCoord))
         #print(newCoord)
-        print(self.size)
-
-        if self.grow == True:
-            print("Grown????\n\n\n")
+        print("SIZE: " + str(self.size))
+        if self.dead == True:
+            print("DEAD DEAD")
+            
+        
         self.drawSnake()
-        pass
+        return self.game_over
 
     #I should do something like: if len(player.pos) < player.size:
     #player.pos.insert(0,coord)
@@ -253,16 +304,11 @@ class Snake:
         drawSquare(self.pos[0][0],self.pos[0][1]) #draws the updated pos of the head of the snake
         lastPos = len(self.pos) -1
         if len(self.pos) > self.size:
-            if self.grow == True:
-                print("DIDNT DELL!!!IH\n\n")
-                self.grow = False
-            else:
-                print("DELED")
+            
+            print("DELED")
 
-                delSquare(self.pos[lastPos][0], self.pos[lastPos][1])
-                deleted = self.pos.pop(lastPos)
-        else:
-            print("NOT DELETING!!!!")
+            delSquare(self.pos[lastPos][0], self.pos[lastPos][1])
+            deleted = self.pos.pop(lastPos)
 
         print("final pos list:")
         print(self.pos)
