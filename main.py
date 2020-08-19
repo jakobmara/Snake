@@ -19,7 +19,7 @@ GHEIGHT = 32
 size = (HEIGHT, WIDTH)
 gameDisplay = pygame.display.set_mode(size)
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption("My First Game")
+pygame.display.set_caption("Jake the Snake                                                                                                                          Highscore: 0")
 largeFont = pygame.font.Font('freesansbold.ttf',115)
 smallFont = pygame.font.Font('freesansbold.ttf',20)
 title = largeFont.render("Snake",True,WHITE)
@@ -41,11 +41,11 @@ def delSquare(posX,posY):
     pygame.draw.rect(gameDisplay, BLACK,(posX*16,posY*16,15,15))
 
 def randSquare():
-    pointX = randint(0,43) #had to go 1 less trhan max cuz off screen
-    pointY = randint(0,31)
-    print(f"x: {pointX} y: {pointY}")
-    drawSquare(pointX,pointY)
-    return (pointX,pointY)
+    foodX = randint(0,43) #had to go 1 less trhan max cuz off screen
+    foodY = randint(0,31)
+    print(f"x: {foodX} y: {foodY}")
+    drawSquare(foodX,foodY)
+    return (foodX,foodY)
 #I think i should make this an object itself and have these things in as class variables so i can use 
 def gameLoop():
     mode = "Paused"
@@ -66,13 +66,14 @@ def gameLoop():
 
 
     #pygame.draw.rect(gameDisplay,WHITE,(100,100,16,16))
-    point_location = [0,0]
+    food_location = [0,0]
 
 
     player = Snake()
     score = player.size - 1 #cuz size starts at 1
     playerScore = "Score %d" % score
     scoreText = smallFont.render(playerScore,True,RED)
+    highscore = 0
     while playing:
         #updates screen
         mouse = pygame.mouse.get_pos()
@@ -92,14 +93,18 @@ def gameLoop():
         pygame.display.flip()
         
 
-        if(player.pos[0][0] == point_location[0] and player.pos[0][1] == point_location[1]): #if player lands on point
+        if(player.pos[0][0] == food_location[0] and player.pos[0][1] == food_location[1]): #if player lands on food
+            
             
             player.add_square()
-            point_location = randSquare() #new point location is setup
+            food_location = randSquare() #new food location is setup
 
 
             scoreText = smallFont.render(playerScore,True,BLACK) #removes old text
+
+            #have to do it twice because 1 doesn't fully wipe the canvas
             gameDisplay.blit(scoreText,[600,0])
+            gameDisplay.blit(scoreText,[600,0]) 
 
             playerScore = "Score %d" % (player.size -1) #updates text with new score
             
@@ -129,7 +134,7 @@ def gameLoop():
                     mode = "playing"
                     player.game_over = False
                     screen.fill(BLACK)
-                    point_location = randSquare()
+                    food_location = randSquare()
                     gameDisplay.blit(scoreText,[600,0])
                     pygame.display.flip()
 
@@ -159,12 +164,17 @@ def gameLoop():
 
         if (diff >= oldDiff+64 and mode == "playing"): #this is the refresh rate
             oldDiff = diff
-            game = player.moveSnake(point_location)
+            game = player.moveSnake(food_location)
             if game == True:
                 mode = "dead"
+                
             #print(f"ticks: {diff}")
-            #print(f"player: {player.pos} point: {point_location} Size: {player.size}")
+            #print(f"player: {player.pos} food: {food_location} Size: {player.size}")
         if(mode == "dead"):
+            if(player.size  - 1> highscore):
+                newCaption = "Jake the Snake                                                                                                                          Highscore: %d" % (player.size - 1)
+                highscore = player.size - 1
+                pygame.display.set_caption(newCaption)
             pass
             #player.del_snake()
     clock.tick(500)
@@ -217,7 +227,7 @@ class Snake:
         #drawSquare(23,16)
     
     #should add new coord and remove last coord in list end of function should call drawSnake()
-    def moveSnake(self,point_location): 
+    def moveSnake(self,food_location): 
         
         #i should get rid of all the update and instead add the new value to the list so that it'd work when it comes to updating the entire array
         #i would insert thew new val and depending on the size i'd have to remove the last item in the list
@@ -282,7 +292,7 @@ class Snake:
             
             pass
         print("NEW  coord: " + str(newCoord))
-        print("point: " + str(point_location) + " New coord: " + str(newCoord))
+        print("food: " + str(food_location) + " New coord: " + str(newCoord))
         #print(newCoord)
         print("SIZE: " + str(self.size))
         if self.dead == True:
