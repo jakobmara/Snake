@@ -16,6 +16,9 @@ GHEIGHT = 32
 
 
 
+#I THINK THERES AN ISSUE IF THE FOOD SPAWNS INSIDE THE SNAKE
+
+
 size = (HEIGHT, WIDTH)
 gameDisplay = pygame.display.set_mode(size)
 screen = pygame.display.set_mode(size)
@@ -26,61 +29,61 @@ title = largeFont.render("Snake",True,WHITE)
 playText = smallFont.render("Play",True,BLACK)
 
 
-
-# The loop will carry on until the user exit the game (e.g. clicks the close button).
-carryOn = True
  
-# The clock will be used to control how fast the screen updates
-clock = pygame.time.Clock()
+
 
 
 def drawSquare(posX, posY):
     pygame.draw.rect(gameDisplay, WHITE,(posX*16,posY*16,15,15))
 
+
+
 def delSquare(posX,posY):
     pygame.draw.rect(gameDisplay, BLACK,(posX*16,posY*16,15,15))
 
-def randSquare():
+#determine/draw new food position
+def randSquare(body):
     foodX = randint(0,43) #had to go 1 less trhan max cuz off screen
     foodY = randint(0,31)
-    print(f"x: {foodX} y: {foodY}")
+    foodLoc = [foodX,foodY]
+    #this loop is so that the new food location doesn't spawn within the snake body
+    while(body.count(foodLoc) >= 1):
+        foodX = randint(0,43) #had to go 1 less trhan max cuz off screen
+        foodY = randint(0,31)
+        foodLoc = [foodX,foodY]
+
     drawSquare(foodX,foodY)
     return (foodX,foodY)
-#I think i should make this an object itself and have these things in as class variables so i can use 
+
+#this is where the game is ran
 def gameLoop():
     mode = "Paused"
-    #creates a 32x44 map (32 = y, 44 = x)
-    map = [[0 for x in range(GLENGTH)] for y in range(GHEIGHT)]
-    
-    print(f"map: {len(map)}")
 
     playing = True
     screen.fill(BLACK)
+    food_location = [0,0]
 
     oldDiff = 0
 
+    #creating start button 
     startText = smallFont.render("Start",True,WHITE)
     startRect = startText.get_rect()
     startRect.center = ((240+(200/2), (100+(75/2))))
     gameDisplay.blit(startText,startRect)
-
-
-    #pygame.draw.rect(gameDisplay,WHITE,(100,100,16,16))
-    food_location = [0,0]
-
-
-    player = Snake()
-    score = player.size - 1 #cuz size starts at 1
+        
+    game = False
+    player = Snake()                                #player snake
+    score = player.size - 1                         #score starts at 0 
     playerScore = "Score %d" % score
-    scoreText = smallFont.render(playerScore,True,RED)
+    scoreText = smallFont.render(playerScore,True,RED) 
     highscore = 0
+
     while playing:
-        #updates screen
         mouse = pygame.mouse.get_pos()
         diff =  pygame.time.get_ticks()
 
 
-        if mode != "playing":
+        if mode != "playing" and mode != "standBy":
 
             if((mouse[0] > 310 and mouse[0] < (310+55)) and (mouse[1] > 125 and mouse[1] < (100+50))):
                 startText = smallFont.render('Start',True,YELLOW)
@@ -88,35 +91,35 @@ def gameLoop():
                 startText = smallFont.render("Start",True,WHITE)
 
             
-            gameDisplay.blit(startText,startRect)
+            gameDisplay.blit(startText,startRect) #updates the screen
 
-        pygame.display.flip()
+        pygame.display.flip() #updates the screen
         
 
         if(player.pos[0][0] == food_location[0] and player.pos[0][1] == food_location[1]): #if player lands on food
             
-            
-            player.add_square()
-            food_location = randSquare() #new food location is setup
 
-
-            scoreText = smallFont.render(playerScore,True,BLACK) #removes old text
-
-            #have to do it twice because 1 doesn't fully wipe the canvas
-            gameDisplay.blit(scoreText,[600,0])
-            gameDisplay.blit(scoreText,[600,0]) 
-
+            player.size+=1
             playerScore = "Score %d" % (player.size -1) #updates text with new score
             
+            pygame.draw.rect(gameDisplay, BLACK,(600,0,90,20)) #draws black rectangle to erase previous score
+            scoreText = smallFont.render(playerScore,True,RED) #changes new score text
+            gameDisplay.blit(scoreText,[600,0])                 #updates screen with new text
+            player.draw_fullSnake()                             #redraws snake incase part of body is inside the score black rectangle
 
-            scoreText = smallFont.render(playerScore,True,RED) #displays new text
-            gameDisplay.blit(scoreText,[600,0])
+            food_location = randSquare(player.pos) #new food location is setup
+
 
         for event in pygame.event.get():
 
             if event.type == pygame.QUIT:
+               
                 playing = False
+            
+            #if mouse button clicked
             if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                #if the mouse button was clicked ontop of start text, spawns the snake
                 if((event.button == 1) and (event.pos[0] > 310 and event.pos[0] < 310+55) and (event.pos[1] > 125 and event.pos[1] < 100+50) and (mode != "playing")):
                     
                     scoreText = smallFont.render(playerScore,True,BLACK) #removes old text
@@ -124,32 +127,60 @@ def gameLoop():
 
                     playerScore = "Score 0" #updates text with new score
                     
-                    print("REWRUTUBG!!! ")
                     scoreText = smallFont.render(playerScore,True,RED) #displays new text
                     gameDisplay.blit(scoreText,[600,0])
                     
-                    print(f"Calling game loop... {mode}")
                    
-                    player.spawn_snake()
-                    mode = "playing"
+                    #mode = "playing"
+                    mode = "standBy"
+                    game = False
                     player.game_over = False
-                    screen.fill(BLACK)
-                    food_location = randSquare()
-                    gameDisplay.blit(scoreText,[600,0])
-                    pygame.display.flip()
+                    screen.fill(BLACK)              #clears screen
+                    player.spawn_snake()            #draws snake on screen
 
-                   #calls the actual game play
+                    food_location = randSquare(player.pos)  #starts off new food location  
+                    gameDisplay.blit(scoreText,[600,0])     #resets score
+                    pygame.display.flip()                   #updates screen
+
+            #this moves the snake anytime a button is pressed
             elif(event.type == pygame.KEYDOWN):
-                if(event.key == pygame.K_LEFT):
-                    player.direction = "WEST"
-                elif(event.key == pygame.K_RIGHT):
-                    player.direction = "EAST"
-                elif(event.key == pygame.K_UP):
-                    player.direction = "NORTH"
-                elif(event.key == pygame.K_DOWN):
-                    player.direction = "SOUTH"
-        
-        #if statement to make sure the score text doesn't get modified 
+                
+                if(mode == "playing"): 
+                    if(event.key == pygame.K_LEFT):
+                        player.direction = "WEST"
+                        game = player.moveSnake(food_location)
+                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+
+                    elif(event.key == pygame.K_RIGHT):
+                        player.direction = "EAST"
+                        game = player.moveSnake(food_location)
+                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+
+                    elif(event.key == pygame.K_UP):
+                        player.direction = "NORTH"
+                        game = player.moveSnake(food_location)
+                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+
+                    elif(event.key == pygame.K_DOWN):
+                        player.direction = "SOUTH"
+                        game = player.moveSnake(food_location)
+                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+                
+                elif(mode == "standBy"):
+                    if(event.key == pygame.K_LEFT):
+                        player.direction = "WEST"
+
+                    elif(event.key == pygame.K_RIGHT):
+                        player.direction = "EAST"
+
+                    elif(event.key == pygame.K_UP):
+                        player.direction = "NORTH"
+
+                    elif(event.key == pygame.K_DOWN):
+                        player.direction = "SOUTH"
+
+                    mode = "playing"
+        #if statement to make sure the score text doesn't get overwritten by snake 
         if(player.pos[0][0] >= 37 - player.size and player.pos[0][1] < 2 + player.size): #added player size because if statement only looks at head pos
             scoreText = smallFont.render(playerScore,True,BLACK) 
             gameDisplay.blit(scoreText,[600,0])
@@ -161,70 +192,53 @@ def gameLoop():
             gameDisplay.blit(scoreText,[600,0])
             pass
 
-
+        #this is the passive way of moving the snake
         if (diff >= oldDiff+64 and mode == "playing"): #this is the refresh rate
             oldDiff = diff
             game = player.moveSnake(food_location)
-            if game == True:
-                mode = "dead"
-                
-            #print(f"ticks: {diff}")
-            #print(f"player: {player.pos} food: {food_location} Size: {player.size}")
+        
+        if game == True:
+            mode = "dead"    
+            
         if(mode == "dead"):
+            player.draw_deadSnake()
+
             if(player.size  - 1> highscore):
                 newCaption = "Jake the Snake                                                                                                                          Highscore: %d" % (player.size - 1)
                 highscore = player.size - 1
                 pygame.display.set_caption(newCaption)
             pass
-            #player.del_snake()
-    clock.tick(500)
 
 
-#how should i do this snake game? make it a board and seperate it into blocks? 
-#i could use hardcoded values but I think that'd be harder when it comes to the previous block trail
 class Snake:
 
     def __init__(self):
         self.size = 1
         self.game_over = False
         self.speed = 1 #might not include speed
-        self.pos = [[21,16]] #coords of the snake's head
+        self.pos = [[21,16]] #coords of the snake's body
         self.direction = "NORTH"
         self.dead = False
 
     def del_snake(self):
         for x in self.pos:
             delSquare(x[0],x[1])
-        #delSquare(self.pos[lastPos][0], self.pos[lastPos][1])
 
-    def add_square(self): #for snake food
-         #finding position of new square
-        if self.direction == "NORTH":
-            newCoords = [self.pos[self.size-1][0],self.pos[self.size-1][1] + 1] 
-        elif self.direction == "SOUTH":
-            newCoords = [self.pos[self.size-1][0],self.pos[self.size-1][1] - 1] 
-        elif self.direction == "EAST":
-            newCoords = [self.pos[self.size-1][0] - 1,self.pos[self.size-1][1]]  
-        elif self.direction == "WEST":
-            newCoords = [self.pos[self.size-1][0] + 1,self.pos[self.size-1][1]] 
+    def draw_fullSnake(self):
+        for x in self.pos:
+            drawSquare(x[0],x[1])
 
-        #have it add the extra square on top just keep that new location as the spot for where the square was added
+    def draw_deadSnake(self):
+        for x in self.pos:
+            pygame.draw.rect(gameDisplay, RED,(x[0]*16,x[1]*16,15,15))
 
 
-
-        #print(f"OG: {self.pos} ADDED: {newCoords}")
-        #self.pos.append(newCoords) #adding it to the list of square positions
-        #drawSquare(newCoords[0],newCoords[1]) #drawing it on screen #I CAN PROLl get rid of this line cuz now drawsnake will handle the drawing
-        self.size += 1 #incrementing score/size
-        pass
 
 
     def spawn_snake(self):
         self.size = 1
         drawSquare(21,16)
         self.pos = [[21,16]]
-        #drawSquare(22,16)
-        #drawSquare(23,16)
     
     #should add new coord and remove last coord in list end of function should call drawSnake()
     def moveSnake(self,food_location): 
@@ -365,8 +379,6 @@ def game_Menu():
             # --- Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
             
-            # --- Limit to 60 frames per second
-            clock.tick(500)
 game_Menu()
 
 print("QUOT")
