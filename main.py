@@ -71,7 +71,7 @@ def gameLoop():
     startRect.center = ((240+(200/2), (100+(75/2))))
     gameDisplay.blit(startText,startRect)
         
-    game = False
+    game_over= False
     player = Snake()                                #player snake
     score = player.size - 1                         #score starts at 0 
     playerScore = "Score %d" % score
@@ -91,23 +91,23 @@ def gameLoop():
                 startText = smallFont.render("Start",True,WHITE)
 
             
-            gameDisplay.blit(startText,startRect) #updates the screen
+            gameDisplay.blit(startText,startRect)   #updates the screen
 
-        pygame.display.flip() #updates the screen
+        pygame.display.flip()                       #updates the screen
         
 
         if(player.pos[0][0] == food_location[0] and player.pos[0][1] == food_location[1]): #if player lands on food
             
 
             player.size+=1
-            playerScore = "Score %d" % (player.size -1) #updates text with new score
+            playerScore = "Score %d" % (player.size -1)         #updates text with new score
             
             pygame.draw.rect(gameDisplay, BLACK,(600,0,90,20)) #draws black rectangle to erase previous score
             scoreText = smallFont.render(playerScore,True,RED) #changes new score text
             gameDisplay.blit(scoreText,[600,0])                 #updates screen with new text
             player.draw_fullSnake()                             #redraws snake incase part of body is inside the score black rectangle
 
-            food_location = randSquare(player.pos) #new food location is setup
+            food_location = randSquare(player.pos)              #new food location is setup
 
 
         for event in pygame.event.get():
@@ -122,50 +122,51 @@ def gameLoop():
                 #if the mouse button was clicked ontop of start text, spawns the snake
                 if((event.button == 1) and (event.pos[0] > 310 and event.pos[0] < 310+55) and (event.pos[1] > 125 and event.pos[1] < 100+50) and (mode != "playing")):
                     
-                    scoreText = smallFont.render(playerScore,True,BLACK) #removes old text
+                    scoreText = smallFont.render(playerScore,True,BLACK)    #removes old text
                     gameDisplay.blit(scoreText,[600,0])
 
-                    playerScore = "Score 0" #updates text with new score
+                    playerScore = "Score 0"                                 #updates text with new score
                     
-                    scoreText = smallFont.render(playerScore,True,RED) #displays new text
+                    scoreText = smallFont.render(playerScore,True,RED)      #displays new text
                     gameDisplay.blit(scoreText,[600,0])
                     
-                   
-                    #mode = "playing"
+                    
+                    #sets/resets the screen and snake properties
                     mode = "standBy"
-                    game = False
-                    player.game_over = False
-                    screen.fill(BLACK)              #clears screen
-                    player.spawn_snake()            #draws snake on screen
+                    game_over= False
+                    screen.fill(BLACK)                                      #clears screen
+                    player.spawn_snake()                                    #draws snake on screen
 
-                    food_location = randSquare(player.pos)  #starts off new food location  
-                    gameDisplay.blit(scoreText,[600,0])     #resets score
-                    pygame.display.flip()                   #updates screen
+                    food_location = randSquare(player.pos)                  #starts off new food location  
+                    gameDisplay.blit(scoreText,[600,0])                     #resets score
+                    pygame.display.flip()                                   #updates screen
 
-            #this moves the snake anytime a button is pressed
+            #if a key is pressed goes into this if
             elif(event.type == pygame.KEYDOWN):
                 
+                #this moves the snake anytime a button is pressed
                 if(mode == "playing"): 
                     if(event.key == pygame.K_LEFT):
                         player.direction = "WEST"
-                        game = player.moveSnake(food_location)
-                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+                        game_over= player.moveSnake()
+                        oldDiff = diff                                      #resets the timer so it doesn't do a double update for the snakes movement
 
                     elif(event.key == pygame.K_RIGHT):
                         player.direction = "EAST"
-                        game = player.moveSnake(food_location)
-                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+                        game_over= player.moveSnake()
+                        oldDiff = diff                                      #resets the timer so it doesn't do a double update for the snakes movement
 
                     elif(event.key == pygame.K_UP):
                         player.direction = "NORTH"
-                        game = player.moveSnake(food_location)
-                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+                        game_over= player.moveSnake()
+                        oldDiff = diff                                      #resets the timer so it doesn't do a double update for the snakes movement
 
                     elif(event.key == pygame.K_DOWN):
                         player.direction = "SOUTH"
-                        game = player.moveSnake(food_location)
-                        oldDiff = diff                          #resets the timer so it doesn't do a double update for the snakes movement
+                        game_over= player.moveSnake()
+                        oldDiff = diff                                      #resets the timer so it doesn't do a double update for the snakes movement
                 
+                #this is to determine the direction the snake goes on spawn
                 elif(mode == "standBy"):
                     if(event.key == pygame.K_LEFT):
                         player.direction = "WEST"
@@ -181,28 +182,29 @@ def gameLoop():
 
                     mode = "playing"
         #if statement to make sure the score text doesn't get overwritten by snake 
-        if(player.pos[0][0] >= 37 - player.size and player.pos[0][1] < 2 + player.size): #added player size because if statement only looks at head pos
+        if(player.pos[0][0] >= 37 - player.size and player.pos[0][1] < 2 + player.size):#added player size because if statement only looks at head pos
             scoreText = smallFont.render(playerScore,True,BLACK) 
             gameDisplay.blit(scoreText,[600,0])
 
-            playerScore = "Score %d" % (player.size -1) #updates text with new score
+            playerScore = "Score %d" % (player.size -1)                                 #updates text with new score
             
 
-            scoreText = smallFont.render(playerScore,True,RED) #displays new text
+            scoreText = smallFont.render(playerScore,True,RED)                          #displays new text
             gameDisplay.blit(scoreText,[600,0])
             pass
 
         #this is the passive way of moving the snake
-        if (diff >= oldDiff+64 and mode == "playing"): #this is the refresh rate
+        if (diff >= oldDiff+64 and mode == "playing"):                                  #this is the refresh rate of the snake
             oldDiff = diff
-            game = player.moveSnake(food_location)
+            game_over= player.moveSnake()
         
-        if game == True:
-            mode = "dead"    
+        if game_over== True:
+            mode = "dead"                                                               #need to change the mode so the rest of the code doesn't need to run
             
         if(mode == "dead"):
             player.draw_deadSnake()
 
+            #updates highscore 
             if(player.size  - 1> highscore):
                 newCaption = "Jake the Snake                                                                                                                          Highscore: %d" % (player.size - 1)
                 highscore = player.size - 1
@@ -214,55 +216,55 @@ class Snake:
 
     def __init__(self):
         self.size = 1
-        self.game_over = False
-        self.speed = 1 #might not include speed
         self.pos = [[21,16]] #coords of the snake's body
         self.direction = "NORTH"
         self.dead = False
 
+    #erases snake (for respawn)
     def del_snake(self):
         for x in self.pos:
             delSquare(x[0],x[1])
 
+    #redraws snake incase snake body overwritten
     def draw_fullSnake(self):
         for x in self.pos:
             drawSquare(x[0],x[1])
 
+    #makes it clear life is over 
     def draw_deadSnake(self):
         for x in self.pos:
             pygame.draw.rect(gameDisplay, RED,(x[0]*16,x[1]*16,15,15))
 
 
 
-
+    #initializes snake
     def spawn_snake(self):
         self.size = 1
         drawSquare(21,16)
         self.pos = [[21,16]]
+        self.dead = False
     
-    #should add new coord and remove last coord in list end of function should call drawSnake()
-    def moveSnake(self,food_location): 
+    #moves the snake
+    def moveSnake(self): 
         
-        #i should get rid of all the update and instead add the new value to the list so that it'd work when it comes to updating the entire array
-        #i would insert thew new val and depending on the size i'd have to remove the last item in the list
         if self.direction == "NORTH":
 
             if self.pos[0][1] == 0:
-                self.game_over = True
+                self.dead = True
                 self.pos[0][1] = 0
                 newCoord = [0,0]
             else:
                 newCoord = [self.pos[0][0],self.pos[0][1] -1]
                 if(self.pos.count(newCoord)) >= 1:
                     self.dead = True
-                    self.game_over = True
                 self.pos.insert(0,newCoord)
                 
             pass
 
         elif self.direction == "SOUTH":
             if self.pos[0][1] == GHEIGHT - 1:
-                self.game_over = True
+
+                self.dead = True
 
                 self.pos[0][1] = GHEIGHT - 1
                 newCoord = [0,0]
@@ -270,14 +272,13 @@ class Snake:
                 newCoord = [self.pos[0][0],self.pos[0][1] +1]
                 if(self.pos.count(newCoord)) >= 1:
                     self.dead = True
-                    self.game_over = True
                 self.pos.insert(0,newCoord)
                 
            
 
         elif self.direction == "EAST":
             if self.pos[0][0] == GLENGTH - 1: #reached border 
-                self.game_over = True
+                self.dead = True
                 self.pos[0][0] = GLENGTH - 1
                 newCoord = [0,0]
                 
@@ -285,7 +286,6 @@ class Snake:
                 newCoord = [self.pos[0][0] + 1,self.pos[0][1]]
                 if(self.pos.count(newCoord)) >= 1:
                     self.dead = True
-                    self.game_over = True
                 self.pos.insert(0,newCoord)
                 
                  
@@ -293,98 +293,67 @@ class Snake:
 
         elif self.direction == "WEST":
             if self.pos[0][0] == 0:
-                self.game_over = True
+                self.dead = True
                 self.pos[0][0] = 0
                 newCoord = [0,0]
             else:
                 newCoord = [self.pos[0][0] - 1,self.pos[0][1]]
                 if(self.pos.count(newCoord)) >= 1:
                     self.dead = True
-                    self.game_over = True
                 self.pos.insert(0,newCoord)
                  
             
-            pass
-        print("NEW  coord: " + str(newCoord))
-        print("food: " + str(food_location) + " New coord: " + str(newCoord))
-        #print(newCoord)
-        print("SIZE: " + str(self.size))
-        if self.dead == True:
-            print("DEAD DEAD")
-            
         
         self.drawSnake()
-        return self.game_over
-
-    #I should do something like: if len(player.pos) < player.size:
+        return self.dead
     #player.pos.insert(0,coord)
 
 
     #this is meant to update the snake body array and draw it on screen
-    #maybe i should make the array 1 item bigger so it can contain the position  that needs to be delted
     def drawSnake(self):
-        print("POS:")
-        #print(self.pos)
-        drawSquare(self.pos[0][0],self.pos[0][1]) #draws the updated pos of the head of the snake
-        lastPos = len(self.pos) -1
+        drawSquare(self.pos[0][0],self.pos[0][1])                       #draws the updated pos of the head of the snake
+        lastPos = len(self.pos) -1                                      #determins last snake block in array
         if len(self.pos) > self.size:
             
-            print("DELED")
-
-            delSquare(self.pos[lastPos][0], self.pos[lastPos][1])
+            delSquare(self.pos[lastPos][0], self.pos[lastPos][1])       #removes last snake block from scrren/array
             deleted = self.pos.pop(lastPos)
 
-        print("final pos list:")
-        print(self.pos)
 
         return 
         
-
+#startup menu 
 def game_Menu():
     playText = smallFont.render("Play",True,BLACK)
 
     menu = True
     while menu:
+        mouse = pygame.mouse.get_pos()
+
+        screen.fill(BLACK)
+        
+        #creating title screen
+        titleRect = title.get_rect()
+        titleRect.center = ((704/2),100)
+        gameDisplay.blit(title,titleRect)
+        pygame.draw.rect(gameDisplay,YELLOW,(240,200,200,75))
+        playRect = playText.get_rect()
+        playRect.center = ((240+(200/2), (200+(75/2))))
+        gameDisplay.blit(playText,playRect)
+
+        #making play button interactive
+        if(mouse[0] > 240 and mouse[0] < 240+200) and (mouse[1] > 200 and mouse[1] < 200+75):
+            playText = smallFont.render("Play",True,WHITE)
+        else:
+            playText = smallFont.render("Play",True,BLACK)
+
+        pygame.display.flip()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 menu= False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if(event.button == 1) and (event.pos[0] > 240 and event.pos[0] < 240+200) and (event.pos[1] > 200 and event.pos[1] < 200+75):
-                   print("Calling game loop2...")
                    menu = False
                    gameLoop()
-                   
-                
-        #had to add this part cuz after the loop switched it'd default back to this screen before finally closing
-        if menu == True:
-
-            mouse = pygame.mouse.get_pos()
-
-            screen.fill(BLACK)
-            #this is my putting title and play button on menu screen
-            titleRect = title.get_rect()
-            titleRect.center = ((704/2),100)
-            gameDisplay.blit(title,titleRect)
-            pygame.draw.rect(gameDisplay,YELLOW,(240,200,200,75))
-            playRect = playText.get_rect()
-            playRect.center = ((240+(200/2), (200+(75/2))))
-            gameDisplay.blit(playText,playRect)
-
-            #making play button interactive
-            if(mouse[0] > 240 and mouse[0] < 240+200) and (mouse[1] > 200 and mouse[1] < 200+75):
-                playText = smallFont.render("Play",True,WHITE)
-            else:
-                playText = smallFont.render("Play",True,BLACK)
-
-            # --- Go ahead and update the screen with what we've drawn.
-            pygame.display.flip()
             
 game_Menu()
-
-print("QUOT")
-pygame.quit()
-
-
-#right now it's messing up because if im going up it deducts 1 to the Y but when i turn right it deducts 1 from the X but doesn't fix the original Y problem
-#possible solutions:
-#   Having an array of 
