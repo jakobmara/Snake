@@ -77,7 +77,7 @@ class Board():
             foodY = randint(0,31)
             foodLoc = [foodX,foodY]
 
-        self.drawSquare(foodX,foodY)
+        self.drawSquare(foodX,foodY, GREEN)
         return (foodX,foodY)
 
     #initializes snake this is used when a player respawns could potentially change this so when a player dies snake settings default back to this
